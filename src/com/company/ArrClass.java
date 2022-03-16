@@ -1,6 +1,6 @@
 package com.company;
 
-public class ArrClass {
+public class ArrClass implements Runnable {
     private final int dim;
     private final int threadNum;
     public final int[] arr;
@@ -12,6 +12,7 @@ public class ArrClass {
         for(int i = 0; i < dim; i++){
             arr[i] = i;
         }
+        arr[dim/3] = -100;
     }
 
     public long partSum(int startIndex, int finishIndex){
@@ -49,14 +50,28 @@ public class ArrClass {
         return threadCount;
     }
 
+    private Bound[] bounds;
     public long threadSum(){
-        ThreadSum[] threadSums = new ThreadSum[threadNum];
-        threadSums[0] = new ThreadSum(0, dim / 2, this);
-        threadSums[1] = new ThreadSum(dim / 2, dim, this);
+        bounds = new Bound[threadNum];
+        bounds[0] = new Bound(0, dim / 2);
+        bounds[1] = new Bound(dim / 2, dim);
+        Thread[] threadSums = new Thread[threadNum];
+        threadSums[0] = new Thread(this);
+        threadSums[0].setName("0");
+        threadSums[1] = new Thread(this);
+        threadSums[1].setName("1");
 
         threadSums[0].start();
         threadSums[1].start();
 
         return getSum();
+    }
+
+    @Override
+    public void run() {
+        int index = Integer.parseInt(Thread.currentThread().getName());
+        long sum = partSum(bounds[index].startIndex(), bounds[index].finishIndex());
+        collectSum(sum);
+        incThreadCount();
     }
 }
